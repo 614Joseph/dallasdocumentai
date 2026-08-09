@@ -204,6 +204,8 @@ select{appearance:none;-webkit-appearance:none;
 form.bigform .submit{width:100%;margin-top:8px;}
 .req::after{content:" *";color:#b3563e;font-weight:700;}
 .reqnote{font-size:12.5px;color:var(--muted);margin:-6px 0 18px;}
+.otherwrap{display:none;margin-top:10px;}
+.f:has(#firm-other:checked) .otherwrap{display:block;}
 .f{margin-bottom:18px;}
 .f label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px;color:var(--ink);}
 .f .why{font-weight:400;color:var(--muted);font-size:13px;}
@@ -494,7 +496,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
             <label><input type="radio" name="firm_type" value="law" required> Law office</label>
             <label><input type="radio" name="firm_type" value="clinic"> Clinic / practice</label>
             <label><input type="radio" name="firm_type" value="realestate"> Real estate / brokerage</label>
-            <label><input type="radio" name="firm_type" value="other"> Other</label>
+            <label><input type="radio" name="firm_type" value="other" id="firm-other"> Other</label>
+          </div>
+          <div class="otherwrap">
+            <input type="text" name="firm_type_other" id="firm-other-text"
+                   placeholder="What kind of firm? For example: accounting, insurance, title company">
           </div>
         </div>
         <div class="f">
@@ -556,8 +562,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
           <div class="f"><label class="req">Name</label><input type="text" name="name" required autocomplete="name"></div>
           <div class="f"><label class="req">Work email</label><input type="email" name="email" required autocomplete="email"></div>
         </div>
-        <div class="f"><label>Phone <span class="why">(optional, if you'd rather talk)</span></label>
-          <input type="text" name="phone" autocomplete="tel"></div>
+        <div class="f"><label class="req">Phone</label>
+          <input type="text" name="phone" required autocomplete="tel" inputmode="tel"></div>
       </div>
 
       <button class="submit" type="submit">Send it over</button>
@@ -773,6 +779,11 @@ function openViewer(highlight){
 }
 function closeViewer(){ document.getElementById("viewer").classList.remove("on"); }
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(); });
+
+document.querySelectorAll('input[name=firm_type]').forEach(r => r.addEventListener('change', () => {
+  const t = document.getElementById('firm-other-text');
+  if (t) t.required = document.getElementById('firm-other').checked;
+}));
 
 function setIntent(v){
   const el = document.getElementById(v === "order" ? "intent-order" : "intent-fit");
