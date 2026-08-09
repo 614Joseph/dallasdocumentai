@@ -155,6 +155,14 @@ h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.3px;margin-bottom:10px;text-w
   font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;padding:4px 10px;
   margin-bottom:12px;}
 .pcard h3{font-size:15.5px;color:var(--ink);margin-bottom:10px;}
+details.pcard summary{cursor:pointer;list-style:none;position:relative;padding-right:28px;}
+details.pcard summary::-webkit-details-marker{display:none;}
+details.pcard summary::after{content:"";position:absolute;right:4px;top:10px;width:9px;height:9px;
+  border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(45deg);transition:transform .2s;}
+details.pcard[open] summary::after{transform:rotate(225deg);top:14px;}
+details.pcard summary .prow{margin-bottom:0;}
+details.pcard[open] summary .prow{margin-bottom:4px;}
 .prow{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin-bottom:4px;}
 .was{font-size:19px;color:#a05252;text-decoration:line-through;text-decoration-thickness:2px;
   font-variant-numeric:tabular-nums;}
@@ -396,9 +404,11 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
       </ul>
       <a class="ctad" href="#start" onclick="setIntent('order')">Start the pilot</a>
     </div>
-    <div class="pcard">
-      <h3>Full rollout, if the pilot proves out</h3>
-      <div class="prow"><b>$10–30k</b><span class="per">fixed quote, scoped to your firm</span></div>
+    <details class="pcard">
+      <summary>
+        <h3>Full rollout, if the pilot proves out</h3>
+        <div class="prow"><b>$10–30k</b><span class="per">fixed quote, scoped to your firm</span></div>
+      </summary>
       <ul>
         <li>All your documents</li>
         <li>Your user accounts and permissions</li>
@@ -406,10 +416,12 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
         <li>Handover, documentation, training</li>
       </ul>
       <a class="ctad line" href="#start" onclick="setIntent('fit')">Ask if it fits first</a>
-    </div>
-    <div class="pcard">
-      <h3>Managed service <span class="per">(optional, after rollout)</span></h3>
-      <div class="prow"><b>$350</b><span class="per">/month, cancel anytime</span></div>
+    </details>
+    <details class="pcard">
+      <summary>
+        <h3>Managed service <span class="per">(optional, after rollout)</span></h3>
+        <div class="prow"><b>$350</b><span class="per">/month, cancel anytime</span></div>
+      </summary>
       <ul>
         <li>Live, managed data pipelines: new documents flow into the assistant automatically as your files grow</li>
         <li>Model upgrades applied as the state of the art moves, tested before they touch your system</li>
@@ -417,7 +429,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
         <li>Optional by design: skip it and the system keeps running, fully yours</li>
       </ul>
       <a class="ctad line" href="#start" onclick="setIntent('fit')">Ask about it</a>
-    </div>
+    </details>
   </div>
   <p class="compnote">Why the strikethrough is real: $5,000 is the going rate for a build like this,
     and it's what the pilot will cost once our first Dallas case studies are on this page. Early
