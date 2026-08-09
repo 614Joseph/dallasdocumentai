@@ -202,6 +202,8 @@ select{appearance:none;-webkit-appearance:none;
   background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
 .radio label:has(input:checked){border-color:var(--acc);background:#f2f9f6;}
 form.bigform .submit{width:100%;margin-top:8px;}
+.req::after{content:" *";color:#b3563e;font-weight:700;}
+.reqnote{font-size:12.5px;color:var(--muted);margin:-6px 0 18px;}
 .f{margin-bottom:18px;}
 .f label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px;color:var(--ink);}
 .f .why{font-weight:400;color:var(--muted);font-size:13px;}
@@ -471,8 +473,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
       <input type="hidden" name="_subject" value="Dallas Document AI - new inquiry">
       <input type="text" name="_honey" style="display:none">
 
+      <p class="reqnote">Fields marked * are required.</p>
       <div class="fgroup">
-        <div class="fghead"><span class="fgnum">1</span><h3>What would you like to do?</h3></div>
+        <div class="fghead"><span class="fgnum">1</span><h3 class="req">What would you like to do?</h3></div>
         <div class="cardpick">
           <label><input type="radio" name="intent" value="order" id="intent-order" required>
             <span class="cp-t">Order the pilot</span>
@@ -486,7 +489,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
       <div class="fgroup">
         <div class="fghead"><span class="fgnum">2</span><h3>About your firm</h3></div>
         <div class="f">
-          <label>What kind of firm are you?</label>
+          <label class="req">What kind of firm are you?</label>
           <div class="radio">
             <label><input type="radio" name="firm_type" value="law" required> Law office</label>
             <label><input type="radio" name="firm_type" value="clinic"> Clinic / practice</label>
@@ -495,13 +498,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
           </div>
         </div>
         <div class="f">
-          <label>What documents would it answer from?
+          <label class="req">What documents would it answer from?
             <span class="why">(specifics help us tell you honestly if this will work)</span></label>
           <textarea name="documents" required placeholder="For example: about 800 client intake packets and closed-case files as PDFs, plus our procedures manual in Word."></textarea>
         </div>
         <div class="frow">
           <div class="f">
-            <label>Roughly how much material?</label>
+            <label class="req">Roughly how much material?</label>
             <select name="volume" required>
               <option value="" selected disabled>Choose one</option>
               <option>Under 100 documents</option>
@@ -511,7 +514,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
             </select>
           </div>
           <div class="f">
-            <label>When do you want this running?</label>
+            <label class="req">When do you want this running?</label>
             <select name="timeline" required>
               <option value="" selected disabled>Choose one</option>
               <option>As soon as possible</option>
@@ -520,14 +523,41 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
             </select>
           </div>
         </div>
+        <div class="frow">
+          <div class="f">
+            <label>Where do your documents live today?</label>
+            <select name="data_location">
+              <option value="" selected disabled>Choose one</option>
+              <option>Microsoft 365 / SharePoint / OneDrive</option>
+              <option>Google Workspace / Drive</option>
+              <option>Local server or NAS</option>
+              <option>Practice management system (Clio, MyCase, and the like)</option>
+              <option>Paper and scans, mostly</option>
+              <option>A mix of these</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>Any special handling requirements?</label>
+            <select name="data_sensitivity">
+              <option value="" selected disabled>Choose one</option>
+              <option>Client-confidential / privileged material</option>
+              <option>HIPAA / medical records</option>
+              <option>Financial records / personal data</option>
+              <option>Nothing special</option>
+              <option>Not sure, tell me what matters</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div class="fgroup">
         <div class="fghead"><span class="fgnum">3</span><h3>Where we reply</h3></div>
         <div class="frow">
-          <div class="f"><label>Name</label><input type="text" name="name" required autocomplete="name"></div>
-          <div class="f"><label>Work email</label><input type="email" name="email" required autocomplete="email"></div>
+          <div class="f"><label class="req">Name</label><input type="text" name="name" required autocomplete="name"></div>
+          <div class="f"><label class="req">Work email</label><input type="email" name="email" required autocomplete="email"></div>
         </div>
+        <div class="f"><label>Phone <span class="why">(optional, if you'd rather talk)</span></label>
+          <input type="text" name="phone" autocomplete="tel"></div>
       </div>
 
       <button class="submit" type="submit">Send it over</button>
