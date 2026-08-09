@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dallas Document AI — your files, answering questions</title>
+<meta name="description" content="We build private document assistants for Dallas law offices, clinics, and brokerages. Your files answer questions, with the source shown. Attach a document and try it on this page. Fixed price, two-week pilot.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+:root{
+  --paper:#faf9f6; --card:#ffffff; --line:#e7e4dc;
+  --ink:#202824; --body:#48524c; --muted:#79817b;
+  --acc:#0f6a52; --accdark:#0b503e;
+  --bench:#161d1a; --benchline:#2b342f; --btxt:#eef2ef; --bdim:#98a49d; --bacc:#4cc9a2;
+  --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--paper);color:var(--body);
+  font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px;}
+h1,h2{font-family:'Source Serif 4',Georgia,serif;color:var(--ink);}
+a{color:var(--acc);}
+
+header{position:sticky;top:0;z-index:50;background:rgba(250,249,246,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);}
+header .wrap{display:flex;justify-content:space-between;align-items:center;
+  padding-top:14px;padding-bottom:14px;gap:12px;}
+.brand{font-weight:700;font-size:16px;color:var(--ink);text-decoration:none;}
+nav{display:flex;gap:22px;align-items:center;}
+nav a{color:var(--muted);text-decoration:none;font-size:14.5px;font-weight:500;}
+nav a:hover{color:var(--ink);}
+.pill{background:var(--acc);color:#fff;text-decoration:none;font-weight:600;font-size:14px;
+  padding:9px 18px;border-radius:8px;}
+.pill:hover{background:var(--accdark);}
+@media(max-width:700px){nav a:not(.pill){display:none;}}
+
+.hero{padding-top:56px;padding-bottom:20px;}
+.hero h1{font-size:clamp(30px,4.5vw,46px);line-height:1.12;letter-spacing:-.4px;max-width:22ch;
+  text-wrap:balance;font-weight:700;}
+.hero .sub{margin-top:16px;font-size:17.5px;max-width:58ch;}
+.hero .sub b{color:var(--ink);font-weight:600;}
+.hero .me{margin-top:14px;font-size:15px;color:var(--muted);}
+.mathline{margin-top:18px;font-size:15.5px;max-width:56ch;background:var(--card);
+  border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:10px;padding:14px 18px;}
+.mathline b{color:var(--ink);}
+
+.benchwrap{padding-top:28px;padding-bottom:8px;}
+.bench{background:var(--bench);border-radius:14px;overflow:hidden;max-width:760px;
+  box-shadow:0 16px 44px rgba(24,34,29,.18);}
+.bench-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--benchline);
+  flex-wrap:wrap;}
+.bench-bar b{font-size:13px;font-weight:600;color:var(--bdim);}
+.quota{margin-left:auto;font-size:11.5px;color:var(--bdim);font-family:var(--mono);}
+.filebar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--benchline);
+  flex-wrap:wrap;}
+.attach{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--bacc);
+  border:1.5px dashed rgba(76,201,162,.45);border-radius:9px;padding:8px 14px;font-weight:600;
+  font-size:13px;cursor:pointer;font-family:inherit;}
+.attach:hover{border-color:var(--bacc);background:rgba(76,201,162,.06);}
+.filechip{display:none;align-items:center;gap:9px;background:rgba(76,201,162,.08);
+  border:1px solid rgba(76,201,162,.28);border-radius:9px;padding:7px 12px;font-size:12.5px;
+  flex-wrap:wrap;}
+.filechip.on{display:inline-flex;}
+.filechip .fname{font-weight:600;color:var(--btxt);max-width:150px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
+.filechip .fstat{color:var(--bdim);font-family:var(--mono);font-size:11px;}
+.filechip button{background:none;border:none;color:var(--bacc);font-weight:600;font-size:12px;
+  cursor:pointer;font-family:inherit;text-decoration:underline;}
+.msgs{padding:16px;height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:11px;}
+.m{max-width:90%;padding:11px 14px;border-radius:12px;font-size:14px;line-height:1.6;}
+.m.user{align-self:flex-end;background:var(--bacc);color:var(--bench);border-bottom-right-radius:4px;
+  font-weight:500;}
+.m.bot{align-self:flex-start;background:rgba(255,255,255,.045);border:1px solid var(--benchline);
+  border-bottom-left-radius:4px;color:var(--btxt);}
+.src{display:inline-block;margin-top:8px;font-size:11px;color:var(--bacc);background:rgba(76,201,162,.1);
+  border:1px solid rgba(76,201,162,.22);border-radius:6px;padding:3px 9px;font-weight:600;
+  font-family:var(--mono);cursor:pointer;}
+.suggest{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 10px;}
+.suggest button{font-family:inherit;font-size:12px;color:var(--bdim);background:rgba(255,255,255,.03);
+  border:1px solid var(--benchline);border-radius:15px;padding:6px 12px;cursor:pointer;}
+.suggest button:hover{color:var(--bacc);border-color:rgba(76,201,162,.4);}
+.chat-in{display:flex;gap:9px;padding:12px 16px;border-top:1px solid var(--benchline);}
+.chat-in input{flex:1;min-width:0;padding:11px 13px;font-size:16px;font-family:inherit;
+  border:1px solid var(--benchline);border-radius:9px;background:rgba(255,255,255,.04);color:var(--btxt);}
+.chat-in input::placeholder{color:#6d7973;font-size:14px;}
+.chat-in input:focus{outline:2px solid var(--bacc);outline-offset:1px;}
+.chat-in button{background:var(--bacc);color:var(--bench);border:none;font-weight:700;font-size:14px;
+  padding:0 20px;border-radius:9px;cursor:pointer;font-family:inherit;}
+.chat-in button:disabled{opacity:.4;cursor:default;}
+.benchfoot{font-size:12.5px;color:var(--muted);margin-top:12px;max-width:66ch;line-height:1.6;}
+
+.viewer{position:fixed;inset:0;z-index:100;background:rgba(20,26,23,.6);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;padding:14px;}
+.viewer.on{display:flex;}
+.vcard{background:var(--bench);border:1px solid var(--benchline);border-radius:14px;max-width:740px;
+  width:100%;max-height:86vh;display:flex;flex-direction:column;overflow:hidden;}
+.vhead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;
+  border-bottom:1px solid var(--benchline);flex-wrap:wrap;}
+.vhead b{font-size:14px;color:var(--btxt);}
+.vhead .vstat{font-family:var(--mono);font-size:11.5px;color:var(--bdim);}
+.vhead button{background:none;border:1px solid var(--benchline);color:var(--btxt);border-radius:8px;
+  padding:6px 13px;cursor:pointer;font-family:inherit;font-size:13px;}
+.vbody{overflow-y:auto;padding:18px;font-family:var(--mono);font-size:12.5px;line-height:1.75;
+  color:var(--bdim);white-space:pre-wrap;word-break:break-word;}
+.vbody .kept{color:var(--btxt);}
+.vbody mark{background:rgba(76,201,162,.3);color:var(--btxt);border-radius:3px;padding:0 2px;}
+.trimline{display:block;margin:16px 0;padding:10px 13px;border:1px dashed rgba(214,150,90,.5);
+  border-radius:8px;color:#cfa06a;font-size:12px;}
+
+section.wrap{padding-top:56px;padding-bottom:56px;}
+h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.3px;margin-bottom:10px;text-wrap:balance;
+  font-weight:700;}
+.lead{color:var(--muted);max-width:62ch;font-size:16.5px;margin-bottom:28px;}
+
+
+.capgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+.cap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;}
+.cap h3{font-size:16px;color:var(--ink);margin-bottom:7px;}
+.cap p{font-size:14.5px;color:var(--muted);}
+
+.band{background:#f2f0e9;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.fitcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:28px;}
+.fitcols h3{font-size:15px;color:var(--ink);margin-bottom:10px;}
+.fitcols ul{list-style:none;}
+.fitcols li{padding:7px 0 7px 24px;position:relative;font-size:15px;}
+.yes li::before{content:"";position:absolute;left:1px;top:14px;width:11px;height:11px;border-radius:50%;
+  background:var(--acc);}
+.no li{color:var(--muted);}
+.no li::before{content:"";position:absolute;left:1px;top:14px;width:11px;height:11px;border-radius:50%;
+  border:2px solid #cdc8ba;}
+
+.compgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+.comp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;}
+.comp.us{border:2px solid var(--acc);background:#f4faf7;}
+.comp h3{font-size:14.5px;color:var(--muted);font-weight:600;margin-bottom:10px;}
+.comp.us h3{color:var(--accdark);}
+.cnum{font-family:'Source Serif 4',serif;font-size:27px;color:var(--ink);letter-spacing:-.5px;
+  margin-bottom:12px;font-variant-numeric:tabular-nums;}
+.cnum span{font-family:'Inter',sans-serif;font-size:13px;color:var(--muted);letter-spacing:0;}
+.comp ul{list-style:none;}
+.comp li{font-size:14px;padding:4px 0 4px 20px;position:relative;color:var(--body);}
+.comp li::before{content:"";position:absolute;left:0;top:12px;width:9px;height:9px;border-radius:50%;
+  background:#d6d2c6;}
+.comp.us li::before{background:var(--acc);}
+.comp li b{color:var(--ink);}
+.compnote{font-size:13px;color:var(--muted);margin-top:16px;max-width:64ch;}
+.pricegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;}
+.pcard.hot{border:2px solid var(--acc);}
+.tag{display:inline-block;background:rgba(15,106,82,.1);color:var(--accdark);font-size:11.5px;
+  font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;padding:4px 10px;
+  margin-bottom:12px;}
+.pcard h3{font-size:15.5px;color:var(--ink);margin-bottom:10px;}
+.prow{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;margin-bottom:4px;}
+.was{font-size:19px;color:#a05252;text-decoration:line-through;text-decoration-thickness:2px;
+  font-variant-numeric:tabular-nums;}
+.prow b{font-family:'Source Serif 4',serif;font-size:36px;color:var(--ink);letter-spacing:-1px;
+  font-variant-numeric:tabular-nums;}
+.per{font-size:13.5px;color:var(--muted);}
+.pcard ul{list-style:none;margin:14px 0 20px;}
+.pcard li{font-size:14px;padding:4px 0 4px 21px;position:relative;}
+.pcard li::before{content:"";position:absolute;left:0;top:11px;width:10px;height:10px;border-radius:50%;
+  background:rgba(15,106,82,.15);border:2.5px solid var(--acc);box-sizing:border-box;}
+.ctad{background:var(--acc);color:#fff;text-decoration:none;font-weight:600;font-size:15px;
+  padding:12px 22px;border-radius:9px;display:inline-block;}
+.ctad:hover{background:var(--accdark);}
+.ctad.line{background:transparent;color:var(--acc);border:1.5px solid var(--acc);}
+
+form{max-width:640px;}
+.f{margin-bottom:18px;}
+.f label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px;color:var(--ink);}
+.f .why{font-weight:400;color:var(--muted);font-size:13px;}
+input[type=text],input[type=email],select,textarea{width:100%;padding:12px 14px;font-size:16px;
+  font-family:inherit;border:1px solid #d9d5c9;border-radius:9px;background:#fff;color:var(--ink);}
+textarea{min-height:96px;resize:vertical;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px;}
+.radio{display:flex;gap:9px;flex-wrap:wrap;}
+.radio label{font-weight:500;font-size:14px;border:1px solid #d9d5c9;border-radius:9px;
+  padding:10px 15px;cursor:pointer;background:#fff;display:flex;align-items:center;gap:8px;}
+.radio input{accent-color:var(--acc);}
+.submit{background:var(--acc);color:#fff;border:none;font-weight:600;font-size:16px;
+  padding:14px 30px;border-radius:9px;cursor:pointer;font-family:inherit;}
+.submit:hover{background:var(--accdark);}
+.formnote{font-size:13.5px;color:var(--muted);margin-top:12px;max-width:54ch;}
+
+footer{border-top:1px solid var(--line);padding:26px 0 42px;font-size:14px;color:var(--muted);}
+footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+
+/* mobile rhythm — MUST stay last: these override same-specificity rules above */
+@media(max-width:700px){
+  .hero{padding-top:34px;padding-bottom:12px;}
+  section.wrap{padding-top:42px;padding-bottom:42px;}
+  .hero h1{font-size:31px;}
+  .hero .sub{font-size:16.5px;}
+  .mathline{font-size:14.5px;padding:13px 15px;}
+  .m{max-width:96%;}
+  .msgs{height:260px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#top">Dallas Document AI</a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#fit">Who it's for</a>
+      <a href="#pricing">Price</a>
+      <a class="pill" href="#start" onclick="setIntent('order')">Start a pilot</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero wrap" id="top">
+  <h1>Your files, answering your staff's questions.</h1>
+  <p class="sub">Contracts, case files, manuals, intake packets. We build a private assistant that
+    has read them and answers in plain English, <b>showing exactly where each answer came from</b>.
+    Don't take our word for it: attach one of your documents below and question it.</p>
+  <p class="me">Built in Dallas by engineers who have shipped these systems for one of the largest
+    companies in the world. Now we build them for firms here.</p>
+  <p class="mathline">Two people spending 30 minutes a day finding things in files is roughly
+    <b>250 hours a year</b>. At a $110/hour paralegal rate, that's <b>$27,500 of searching</b>.
+    That's the bill this quietly deletes.</p>
+</div>
+
+<div class="benchwrap wrap">
+  <div class="bench" id="demo">
+    <div class="bench-bar">
+      <b id="benchtitle">Demo — reading a sample office handbook</b>
+      <span class="quota" id="quota">3 questions today</span>
+    </div>
+    <div class="filebar">
+      <button class="attach" onclick="document.getElementById('fileinput').click()">＋ Attach your own PDF or TXT</button>
+      <input id="fileinput" type="file" accept=".pdf,.txt,.md" hidden onchange="onFile(this.files[0])">
+      <span class="filechip" id="filechip">
+        <span class="fname" id="fname"></span>
+        <span class="fstat" id="fstat"></span>
+        <button onclick="openViewer()">see what I kept</button>
+      </span>
+    </div>
+    <div class="msgs" id="msgs">
+      <div class="m bot">Right now I'm reading a sample law-office handbook. Ask about vacation,
+        intake, billing, conflicts, or deadlines. Or attach your own file up top and I'll answer
+        from that instead.</div>
+    </div>
+    <div class="suggest" id="suggest">
+      <button onclick="ask('How much vacation do associates get?')">vacation policy</button>
+      <button onclick="ask('What are the steps for new client intake?')">client intake</button>
+      <button onclick="ask('How do conflict checks work?')">conflict checks</button>
+    </div>
+    <div class="chat-in">
+      <input id="q" type="text" placeholder="Ask the document a question" maxlength="200"
+             onkeydown="if(event.key==='Enter')ask()">
+      <button id="send" onclick="ask()">Ask</button>
+    </div>
+  </div>
+  <p class="benchfoot">Runs in your browser; your file never leaves your computer.
+    Demo reads the first 3,000 words and answers 3 questions a day. The real build reads everything.</p>
+</div>
+
+<!-- accepted-set viewer -->
+<div class="viewer" id="viewer" onclick="if(event.target===this)closeViewer()">
+  <div class="vcard">
+    <div class="vhead">
+      <b id="vtitle">What I kept</b>
+      <span class="vstat" id="vstat"></span>
+      <button onclick="closeViewer()">Close</button>
+    </div>
+    <div class="vbody" id="vbody"></div>
+  </div>
+</div>
+
+
+
+<section class="wrap" id="how">
+  <h2>What the real build adds</h2>
+  <p class="lead">The pilot and rollout work on your actual document pile, with none of the demo's
+    limits.</p>
+  <div class="capgrid">
+    <div class="cap"><h3>Reads everything</h3><p>All your documents, not 3,000 words. Clean PDFs,
+      Word files, and scanned paper too; we run OCR so the filing cabinet counts.</p></div>
+    <div class="cap"><h3>Real answers, still sourced</h3><p>A full language model writes the
+      answer, and every claim still points at the page it came from.</p></div>
+    <div class="cap"><h3>Private, in writing</h3><p>Your material serves your assistant only.
+      Nothing trains anyone else's model. That goes in the contract.</p></div>
+    <div class="cap"><h3>Yours when it's done</h3><p>You get the system, documentation, and a
+      walkthrough. No monthly ransom to keep what you paid for.</p></div>
+  </div>
+</section>
+
+<div class="band">
+  <section class="wrap" id="fit">
+    <h2>Who this is for</h2>
+    <p class="lead">We'd rather tell you now than after a meeting.</p>
+    <div class="fitcols">
+      <div class="yes"><h3>Probably a fit</h3>
+        <ul>
+          <li>Your staff answers the same questions from the same documents, weekly</li>
+          <li>New hires take weeks to learn where things are</li>
+          <li>You have 100+ documents that matter: contracts, SOPs, case files, policies</li>
+          <li>You want a fixed price and a small pilot before anything bigger</li>
+        </ul>
+      </div>
+      <div class="no"><h3>Probably not</h3>
+        <ul>
+          <li>You want a chat widget for your website to capture leads. Cheaper tools do that.</li>
+          <li>The knowledge lives in people's heads, not in documents</li>
+          <li>You need legal or medical advice written, not your own material found</li>
+          <li>Budget under $2,000</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="wrap" id="compare">
+  <h2>What this costs everywhere else</h2>
+  <p class="lead">You're going to compare anyway. Here's the math done for you, using published
+    2026 prices.</p>
+  <div class="compgrid">
+    <div class="comp">
+      <h3>Do-it-yourself chatbot tools</h3>
+      <div class="cnum">$40–500<span>/month</span></div>
+      <ul>
+        <li>You do the setup, tuning, and upkeep yourself</li>
+        <li>Your documents sit on their cloud, under their terms</li>
+        <li>Generic tool, no one accountable when answers are wrong</li>
+      </ul>
+    </div>
+    <div class="comp">
+      <h3>Legal AI subscriptions</h3>
+      <div class="cnum">$225–499<span>/user/month</span></div>
+      <ul>
+        <li>A 4-person firm pays <b>$12,000 to $24,000 a year</b></li>
+        <li>Forever. Stop paying, it's gone</li>
+        <li>Their platform, their roadmap, their price increases</li>
+      </ul>
+    </div>
+    <div class="comp us">
+      <h3>This</h3>
+      <div class="cnum">$3,500<span> once, then own it</span></div>
+      <ul>
+        <li>Built for you, on your documents, by an engineer</li>
+        <li>Runs on systems you control</li>
+        <li>One fixed rollout quote after the pilot. No seats, no meter</li>
+      </ul>
+    </div>
+  </div>
+  <p class="compnote">Subscription figures are vendors' published or reported 2026 pricing for the
+    leading document-chatbot and legal AI products. Bring us a quote and we'll do this math on your
+    real headcount.</p>
+</section>
+
+<div class="band">
+  <section class="wrap" id="data">
+    <h2>Where your data lives</h2>
+    <p class="lead">The question every firm should ask first, answered without a compliance
+      brochure.</p>
+    <div class="capgrid">
+      <div class="cap"><h3>In the demo above</h3><p>Your file is read inside your browser and never
+        transmitted. Close the tab and nothing of it exists anywhere.</p></div>
+      <div class="cap"><h3>During the build</h3><p>Your documents are processed in a private
+        workspace used only for your assistant. Nothing is used to train anyone else's model.</p></div>
+      <div class="cap"><h3>When it runs</h3><p>The assistant runs where you choose: on your
+        accounts and infrastructure, under your control. We hand over the keys, we don't keep
+        them.</p></div>
+      <div class="cap"><h3>On paper</h3><p>All of the above goes in the agreement, in plain
+        English, before any file changes hands.</p></div>
+    </div>
+  </section>
+</div>
+
+<section class="wrap" id="pricing">
+  <h2>The price</h2>
+  <p class="lead">Fixed. You know the number before we start, and it doesn't move.</p>
+  <div class="pricegrid">
+    <div class="pcard hot">
+      <span class="tag">Launch price</span>
+      <h3>Two-week pilot</h3>
+      <div class="prow"><span class="was">$5,000</span><b>$3,500</b><span class="per">fixed</span></div>
+      <ul>
+        <li>Your documents in, a working assistant out</li>
+        <li>Tested on questions your staff actually asks</li>
+        <li>Sources shown on every answer, like the demo</li>
+        <li>If it doesn't prove out, you know at pilot cost, not rollout cost</li>
+      </ul>
+      <a class="ctad" href="#start" onclick="setIntent('order')">Start the pilot</a>
+    </div>
+    <div class="pcard">
+      <h3>Full rollout, if the pilot proves out</h3>
+      <div class="prow"><b>$5–10k</b><span class="per">fixed quote</span></div>
+      <ul>
+        <li>All your documents</li>
+        <li>Your user accounts and permissions</li>
+        <li>Connected to your intake and office tools</li>
+        <li>Handover, documentation, training</li>
+      </ul>
+      <a class="ctad line" href="#start" onclick="setIntent('fit')">Ask if it fits first</a>
+    </div>
+    <div class="pcard">
+      <h3>Keep it current <span class="per">(optional, after rollout)</span></h3>
+      <div class="prow"><b>$350</b><span class="per">/month, cancel anytime</span></div>
+      <ul>
+        <li>New documents synced in as your files grow</li>
+        <li>Model updates as the AI world moves</li>
+        <li>Monitoring, and a human who answers when you call</li>
+        <li>Skip it entirely: the system still runs, and it's still yours</li>
+      </ul>
+      <a class="ctad line" href="#start" onclick="setIntent('fit')">Ask about it</a>
+    </div>
+  </div>
+  <p class="compnote">Why the strikethrough is real: $5,000 is the going rate for a build like this,
+    and it's what the pilot will cost once our first Dallas case studies are on this page. Early
+    clients get the lower price because they are the case studies.</p>
+</section>
+
+<div class="band">
+  <section class="wrap" id="start">
+    <h2>Start here</h2>
+    <p class="lead">Order the pilot and you'll have the agreement and invoice within a business day.
+      Not sure yet? Answer honestly and we'll tell you straight whether it's worth your money.
+      Either way, nobody cold-calls you.</p>
+
+    <!-- formsubmit.co: no account needed. First submission emails a one-time activation link. -->
+    <form action="https://formsubmit.co/josefokonofua@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="Dallas Document AI - new inquiry">
+      <input type="text" name="_honey" style="display:none">
+      <div class="f">
+        <label>What would you like to do?</label>
+        <div class="radio">
+          <label><input type="radio" name="intent" value="order" id="intent-order" required> Order the pilot ($3,500)</label>
+          <label><input type="radio" name="intent" value="fit" id="intent-fit"> Ask if it fits first</label>
+        </div>
+      </div>
+      <div class="f">
+        <label>What kind of firm are you?</label>
+        <div class="radio">
+          <label><input type="radio" name="firm_type" value="law" required> Law office</label>
+          <label><input type="radio" name="firm_type" value="clinic"> Clinic / practice</label>
+          <label><input type="radio" name="firm_type" value="realestate"> Real estate / brokerage</label>
+          <label><input type="radio" name="firm_type" value="other"> Other</label>
+        </div>
+      </div>
+      <div class="f">
+        <label>What documents would it answer from?
+          <span class="why">(specifics help us tell you honestly if this will work)</span></label>
+        <textarea name="documents" required placeholder="For example: about 800 client intake packets and closed-case files as PDFs, plus our procedures manual in Word."></textarea>
+      </div>
+      <div class="f">
+        <label>Roughly how much material?</label>
+        <select name="volume" required>
+          <option value="" selected disabled>Choose one</option>
+          <option>Under 100 documents</option>
+          <option>100 to 1,000 documents</option>
+          <option>1,000 to 10,000 documents</option>
+          <option>More than 10,000</option>
+        </select>
+      </div>
+      <div class="f">
+        <label>When do you want this running?</label>
+        <select name="timeline" required>
+          <option value="" selected disabled>Choose one</option>
+          <option>As soon as possible</option>
+          <option>This quarter</option>
+          <option>Just exploring for now</option>
+        </select>
+      </div>
+      <div class="f"><label>Name</label><input type="text" name="name" required autocomplete="name"></div>
+      <div class="f"><label>Work email</label><input type="email" name="email" required autocomplete="email"></div>
+      <button class="submit" type="submit">Send</button>
+      <p class="formnote">Orders get the agreement and invoice within one business day. Fit
+        questions get a straight answer, including "don't buy this" when that's the truth.</p>
+    </form>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>Dallas Document AI · Dallas–Fort Worth, TX
+      <!-- swap in your registered company: "Dallas Document AI is a service of <Company>, LLC" --></div>
+    <div><a href="#start">Start a pilot</a></div>
+  </div>
+</footer>
+
+<script>
+// Everything runs CLIENT-SIDE on purpose: the visitor's file is parsed in their browser and never
+// uploaded (the privacy line on the page stays true), and there's no API key here to drain.
+const TOKEN_CAP = 3000;
+const CHUNK = 70;
+
+const SAMPLE = [
+ {doc:"Employee Handbook", page:4, tags:"vacation pto paid time off days leave holiday",
+  text:"Associates accrue 15 days of paid vacation per year, plus 8 firm holidays. Vacation requests of 3 or more consecutive days need partner approval two weeks in advance."},
+ {doc:"Employee Handbook", page:5, tags:"sick leave illness family medical",
+  text:"Employees receive 6 paid sick days annually. Unused sick days do not roll over. Extended medical leave follows the firm's FMLA policy, coordinated through the office manager."},
+ {doc:"Intake Procedures", page:2, tags:"intake new client steps onboarding open matter engagement",
+  text:"New client intake has four steps: (1) conflict check against the master client index, (2) engagement letter signed before any legal work, (3) matter opened in the practice system with a billing code, (4) intake packet scanned to the client file within 48 hours."},
+ {doc:"Intake Procedures", page:3, tags:"conflict check conflicts index waiver adverse",
+  text:"Conflict checks are run by the office manager against the master client index, covering current clients, former clients within 7 years, and adverse parties. Any hit goes to the managing partner, who decides whether a waiver request is appropriate."},
+ {doc:"Billing Manual", page:1, tags:"billing rates hourly invoice fees retainer",
+  text:"Standard billing: partners $425 per hour, associates $250 per hour, paralegals $110 per hour. Invoices go out the first business week of each month, and retainers are replenished at the 25 percent threshold."},
+ {doc:"Billing Manual", page:2, tags:"expenses reimbursement filing fees costs travel",
+  text:"Client-billable expenses include filing fees, service of process, and expert fees, passed through at cost. Travel is billable at half the hourly rate. All expenses over $200 need advance client approval in writing."},
+ {doc:"Court Deadlines Guide", page:1, tags:"deadline filing answer response court days texas civil",
+  text:"In Texas civil practice, a defendant's answer is due by 10 a.m. on the Monday following 20 days after service. The deadlines calendar is maintained in the practice system, and every filing deadline gets a 5-day and 1-day reminder to the responsible attorney."},
+ {doc:"Employee Handbook", page:9, tags:"remote work from home office hybrid schedule",
+  text:"Associates may work remotely up to 2 days per week with practice group approval. Client meetings and court appearances always take precedence over remote days."},
+ {doc:"Records Policy", page:1, tags:"records retention destroy closed files storage years",
+  text:"Closed client files are retained for 7 years after the matter closes, then reviewed for destruction. Original wills, deeds, and court-filed originals are never destroyed and are stored in the fire safe."},
+];
+const STOP = new Set("the a an is are was were do does did how what when where who why which much many get got for of to in on at by with your our my we you i it and or not no if then than this that these those be been has have had will would can could".split(" "));
+
+let attached = null;
+
+function tokenizeWords(t){ return t.split(/\s+/).filter(Boolean); }
+
+function buildAccepted(name, pages){
+  let kept = [], total = 0, budget = TOKEN_CAP;
+  for (const p of pages){
+    const words = tokenizeWords(p.text);
+    total += words.length;
+    if (budget > 0 && words.length){
+      const take = words.slice(0, budget);
+      kept.push({page: p.page, text: take.join(" ")});
+      budget -= take.length;
+    }
+  }
+  const keptWords = TOKEN_CAP - budget;
+  const chunks = [];
+  for (const k of kept){
+    const w = tokenizeWords(k.text);
+    for (let i = 0; i < w.length; i += CHUNK){
+      chunks.push({doc: name, page: k.page, tags: "", text: w.slice(i, i + CHUNK).join(" ")});
+    }
+  }
+  const keptText = kept.map(k => k.text).join("\n\n");
+  let trimmedPreview = "";
+  if (total > keptWords){
+    const all = pages.map(p => p.text).join(" ");
+    trimmedPreview = tokenizeWords(all).slice(keptWords, keptWords + 120).join(" ");
+  }
+  return {name, chunks, keptWords, totalWords: total, keptText, trimmedPreview};
+}
+
+async function onFile(file){
+  if (!file) return;
+  const name = file.name;
+  try{
+    let pages = [];
+    if (/\.pdf$/i.test(name)){
+      if (!window.pdfjsLib){ demoSay("Reading PDFs needs this page loaded with internet access. Try a .txt file, or reload online."); return; }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+      const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+      const maxPages = Math.min(pdf.numPages, 40);
+      for (let i = 1; i <= maxPages; i++){
+        const pg = await pdf.getPage(i);
+        const tc = await pg.getTextContent();
+        pages.push({page: i, text: tc.items.map(it => it.str).join(" ")});
+      }
+    } else {
+      pages = [{page: 1, text: await file.text()}];
+    }
+    attached = buildAccepted(name, pages);
+    if (!attached.keptWords){
+      demoSay("I couldn't find readable text in that file. A pure scan needs OCR, which the real build includes; the demo doesn't. Try a text-based PDF or a .txt file.");
+      attached = null; return;
+    }
+    document.getElementById("filechip").classList.add("on");
+    document.getElementById("fname").textContent = name;
+    document.getElementById("fstat").textContent =
+      attached.keptWords.toLocaleString() + " of " + attached.totalWords.toLocaleString() + " words kept";
+    document.getElementById("benchtitle").textContent = "Demo — reading your file: " + name;
+    demoSay("Read it. I kept the first " + attached.keptWords.toLocaleString() + " words of " +
+      attached.totalWords.toLocaleString() + ". Click “see what I kept” for the exact cut " +
+      "line, then ask me about what's in the kept part.");
+    document.getElementById("suggest").style.display = "none";
+  } catch(e){
+    demoSay("I couldn't read that file (" + (e && e.message ? e.message : "unknown error") + "). Try a different PDF or a .txt.");
+  }
+}
+
+function corpus(){ return attached ? attached.chunks : SAMPLE; }
+
+function score(q, item){
+  const words = q.toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(w => w && !STOP.has(w));
+  const hay = ((item.tags || "") + " " + item.text).toLowerCase();
+  let s = 0;
+  for (const w of words){
+    if (item.tags && item.tags.includes(w)) s += 3;
+    else if (hay.includes(w)) s += 1;
+  }
+  return s;
+}
+
+function quotaLeft(){
+  const today = new Date().toDateString();
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem("ddai_demo") || "{}"); } catch(e){}
+  if (st.day !== today) st = {day: today, used: 0};
+  return {left: Math.max(0, 3 - (st.used || 0)), st};
+}
+function useQuota(){
+  const {st} = quotaLeft();
+  st.used = (st.used || 0) + 1;
+  localStorage.setItem("ddai_demo", JSON.stringify(st));
+  paintQuota();
+}
+function paintQuota(){
+  const {left} = quotaLeft();
+  document.getElementById("quota").textContent =
+    left > 0 ? left + (left === 1 ? " question" : " questions") + " today" : "that's 3 for today";
+  const done = left <= 0;
+  document.getElementById("q").disabled = done;
+  document.getElementById("send").disabled = done;
+  if (done) document.getElementById("q").placeholder = "Come back tomorrow, or start a pilot on your full documents";
+}
+
+function add(cls, html){
+  const d = document.createElement("div");
+  d.className = "m " + cls;
+  d.innerHTML = html;
+  const box = document.getElementById("msgs");
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+  return d;
+}
+function demoSay(t){ add("bot", esc(t)); }
+
+function ask(preset){
+  const {left} = quotaLeft();
+  if (left <= 0){ paintQuota(); return; }
+  const input = document.getElementById("q");
+  const q = (preset || input.value || "").trim();
+  if (!q) return;
+  input.value = "";
+  add("user", esc(q));
+  useQuota();
+  const ranked = corpus().map(c => [score(q, c), c]).sort((a, b) => b[0] - a[0]);
+  setTimeout(() => {
+    if (!ranked.length || ranked[0][0] < 2){
+      add("bot", "That isn't in the " + (attached ? "part of your file I kept" : "sample handbook") +
+        ", so I won't guess. In the real build the refusal works the same way: an answer from your " +
+        "documents, or an honest “it's not in there.”" +
+        '<br><span class="src">no source found</span>');
+    } else {
+      const best = ranked[0][1];
+      const label = attached ? esc(best.doc) + " · kept text, p. " + best.page
+                             : esc(best.doc) + ", p. " + best.page;
+      const el = add("bot", esc(best.text) + '<br><span class="src">' + label + "</span>");
+      const chip = el.querySelector(".src");
+      if (attached && chip) chip.onclick = () => openViewer(best.text);
+    }
+  }, 420);
+}
+function esc(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+function openViewer(highlight){
+  if (!attached) return;
+  document.getElementById("vtitle").textContent = "What I kept · " + attached.name;
+  document.getElementById("vstat").textContent =
+    attached.keptWords.toLocaleString() + " of " + attached.totalWords.toLocaleString() + " words (" +
+    Math.round(100 * attached.keptWords / Math.max(1, attached.totalWords)) + "%)";
+  let kept = esc(attached.keptText);
+  if (highlight){
+    const h = esc(highlight);
+    kept = kept.split(h).join("<mark>" + h + "</mark>");
+  }
+  let html = '<span class="kept">' + kept + "</span>";
+  if (attached.totalWords > attached.keptWords){
+    html += '<span class="trimline">✂ I stopped reading here · ' +
+      (attached.totalWords - attached.keptWords).toLocaleString() +
+      " words were not read · the real build has no such limit</span>";
+    html += esc(attached.trimmedPreview) + " …";
+  }
+  document.getElementById("vbody").innerHTML = html;
+  document.getElementById("viewer").classList.add("on");
+  if (highlight){
+    const m = document.querySelector("#vbody mark");
+    if (m) m.scrollIntoView({block: "center"});
+  }
+}
+function closeViewer(){ document.getElementById("viewer").classList.remove("on"); }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(); });
+
+function setIntent(v){
+  const el = document.getElementById(v === "order" ? "intent-order" : "intent-fit");
+  if (el) el.checked = true;
+}
+paintQuota();
+</script>
+</body>
+</html>
