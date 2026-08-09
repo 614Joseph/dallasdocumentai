@@ -179,7 +179,29 @@ details.pcard[open] summary .prow{margin-bottom:4px;}
 .ctad:hover{background:var(--accdark);}
 .ctad.line{background:transparent;color:var(--acc);border:1.5px solid var(--acc);}
 
-form{max-width:640px;}
+form.bigform{max-width:680px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:30px 28px;box-shadow:0 10px 34px rgba(24,34,29,.07);}
+.fgroup{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--line);}
+.fgroup:last-of-type{border-bottom:none;margin-bottom:6px;padding-bottom:8px;}
+.fghead{display:flex;align-items:center;gap:11px;margin-bottom:16px;}
+.fgnum{width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-weight:700;
+  font-size:13.5px;display:flex;align-items:center;justify-content:center;flex:none;}
+.fghead h3{font-family:'Inter',sans-serif;font-size:16px;color:var(--ink);font-weight:650;}
+.cardpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+.cardpick label{display:block;border:1.5px solid #d9d5c9;border-radius:12px;padding:15px 17px;
+  cursor:pointer;background:#fff;}
+.cardpick label:has(input:checked){border-color:var(--acc);background:#f2f9f6;
+  outline:2px solid rgba(15,106,82,.18);}
+.cardpick input{accent-color:var(--acc);margin-right:8px;}
+.cardpick .cp-t{font-weight:650;color:var(--ink);font-size:15.5px;}
+.cardpick .cp-d{display:block;font-size:13px;color:var(--muted);margin-top:5px;margin-left:24px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:560px){.frow{grid-template-columns:1fr;}}
+select{appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2379817b' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+.radio label:has(input:checked){border-color:var(--acc);background:#f2f9f6;}
+form.bigform .submit{width:100%;margin-top:8px;}
 .f{margin-bottom:18px;}
 .f label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px;color:var(--ink);}
 .f .why{font-weight:400;color:var(--muted);font-size:13px;}
@@ -445,54 +467,71 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
       Either way, nobody cold-calls you.</p>
 
     <!-- formsubmit.co: no account needed. First submission emails a one-time activation link. -->
-    <form action="https://formsubmit.co/josefokonofua@gmail.com" method="POST">
+    <form class="bigform" action="https://formsubmit.co/josefokonofua@gmail.com" method="POST">
       <input type="hidden" name="_subject" value="Dallas Document AI - new inquiry">
       <input type="text" name="_honey" style="display:none">
-      <div class="f">
-        <label>What would you like to do?</label>
-        <div class="radio">
-          <label><input type="radio" name="intent" value="order" id="intent-order" required> Order the pilot ($3,500)</label>
-          <label><input type="radio" name="intent" value="fit" id="intent-fit"> Ask if it fits first</label>
+
+      <div class="fgroup">
+        <div class="fghead"><span class="fgnum">1</span><h3>What would you like to do?</h3></div>
+        <div class="cardpick">
+          <label><input type="radio" name="intent" value="order" id="intent-order" required>
+            <span class="cp-t">Order the pilot</span>
+            <span class="cp-d">$3,500 · agreement and invoice within one business day</span></label>
+          <label><input type="radio" name="intent" value="fit" id="intent-fit">
+            <span class="cp-t">Ask if it fits first</span>
+            <span class="cp-d">A straight answer, including "don't buy this" if that's the truth</span></label>
         </div>
       </div>
-      <div class="f">
-        <label>What kind of firm are you?</label>
-        <div class="radio">
-          <label><input type="radio" name="firm_type" value="law" required> Law office</label>
-          <label><input type="radio" name="firm_type" value="clinic"> Clinic / practice</label>
-          <label><input type="radio" name="firm_type" value="realestate"> Real estate / brokerage</label>
-          <label><input type="radio" name="firm_type" value="other"> Other</label>
+
+      <div class="fgroup">
+        <div class="fghead"><span class="fgnum">2</span><h3>About your firm</h3></div>
+        <div class="f">
+          <label>What kind of firm are you?</label>
+          <div class="radio">
+            <label><input type="radio" name="firm_type" value="law" required> Law office</label>
+            <label><input type="radio" name="firm_type" value="clinic"> Clinic / practice</label>
+            <label><input type="radio" name="firm_type" value="realestate"> Real estate / brokerage</label>
+            <label><input type="radio" name="firm_type" value="other"> Other</label>
+          </div>
+        </div>
+        <div class="f">
+          <label>What documents would it answer from?
+            <span class="why">(specifics help us tell you honestly if this will work)</span></label>
+          <textarea name="documents" required placeholder="For example: about 800 client intake packets and closed-case files as PDFs, plus our procedures manual in Word."></textarea>
+        </div>
+        <div class="frow">
+          <div class="f">
+            <label>Roughly how much material?</label>
+            <select name="volume" required>
+              <option value="" selected disabled>Choose one</option>
+              <option>Under 100 documents</option>
+              <option>100 to 1,000 documents</option>
+              <option>1,000 to 10,000 documents</option>
+              <option>More than 10,000</option>
+            </select>
+          </div>
+          <div class="f">
+            <label>When do you want this running?</label>
+            <select name="timeline" required>
+              <option value="" selected disabled>Choose one</option>
+              <option>As soon as possible</option>
+              <option>This quarter</option>
+              <option>Just exploring for now</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div class="f">
-        <label>What documents would it answer from?
-          <span class="why">(specifics help us tell you honestly if this will work)</span></label>
-        <textarea name="documents" required placeholder="For example: about 800 client intake packets and closed-case files as PDFs, plus our procedures manual in Word."></textarea>
+
+      <div class="fgroup">
+        <div class="fghead"><span class="fgnum">3</span><h3>Where we reply</h3></div>
+        <div class="frow">
+          <div class="f"><label>Name</label><input type="text" name="name" required autocomplete="name"></div>
+          <div class="f"><label>Work email</label><input type="email" name="email" required autocomplete="email"></div>
+        </div>
       </div>
-      <div class="f">
-        <label>Roughly how much material?</label>
-        <select name="volume" required>
-          <option value="" selected disabled>Choose one</option>
-          <option>Under 100 documents</option>
-          <option>100 to 1,000 documents</option>
-          <option>1,000 to 10,000 documents</option>
-          <option>More than 10,000</option>
-        </select>
-      </div>
-      <div class="f">
-        <label>When do you want this running?</label>
-        <select name="timeline" required>
-          <option value="" selected disabled>Choose one</option>
-          <option>As soon as possible</option>
-          <option>This quarter</option>
-          <option>Just exploring for now</option>
-        </select>
-      </div>
-      <div class="f"><label>Name</label><input type="text" name="name" required autocomplete="name"></div>
-      <div class="f"><label>Work email</label><input type="email" name="email" required autocomplete="email"></div>
-      <button class="submit" type="submit">Send</button>
-      <p class="formnote">Orders get the agreement and invoice within one business day. Fit
-        questions get a straight answer, including "don't buy this" when that's the truth.</p>
+
+      <button class="submit" type="submit">Send it over</button>
+      <p class="formnote">Replies within one business day. No calls unless you ask for one.</p>
     </form>
   </section>
 </div>
