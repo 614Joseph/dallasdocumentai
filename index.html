@@ -206,6 +206,10 @@ form.bigform .submit{width:100%;margin-top:8px;}
 .reqnote{font-size:12.5px;color:var(--muted);margin:-6px 0 18px;}
 .otherwrap{display:none;margin-top:10px;}
 .f:has(#firm-other:checked) .otherwrap{display:block;}
+.onboardwrap{display:none;margin-top:16px;background:#f2f9f6;border:1px solid rgba(15,106,82,.25);
+  border-radius:12px;padding:16px 16px 4px;}
+.fgroup:has(#intent-order:checked) .onboardwrap{display:block;}
+.obhead{font-size:14px;color:var(--accdark);font-weight:600;margin-bottom:12px;}
 .f{margin-bottom:18px;}
 .f label{display:block;font-weight:600;font-size:14.5px;margin-bottom:6px;color:var(--ink);}
 .f .why{font-weight:400;color:var(--muted);font-size:13px;}
@@ -485,6 +489,29 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
           <label><input type="radio" name="intent" value="fit" id="intent-fit">
             <span class="cp-t">Ask if it fits first</span>
             <span class="cp-d">A straight answer, including "don't buy this" if that's the truth</span></label>
+        </div>
+        <div class="onboardwrap">
+          <p class="obhead">Pick a time for your onboarding call and we'll confirm it in the reply:</p>
+          <div class="frow">
+            <div class="f">
+              <label class="req">Preferred day</label>
+              <select name="onboarding_day">
+                <option value="" selected disabled>Choose one</option>
+                <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                <option>Thursday</option><option>Friday</option>
+                <option>Whichever comes first</option>
+              </select>
+            </div>
+            <div class="f">
+              <label class="req">Time window (Central)</label>
+              <select name="onboarding_time">
+                <option value="" selected disabled>Choose one</option>
+                <option>Morning, 9 to 12</option>
+                <option>Lunch, 12 to 2</option>
+                <option>Afternoon, 2 to 5</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -785,9 +812,21 @@ document.querySelectorAll('input[name=firm_type]').forEach(r => r.addEventListen
   if (t) t.required = document.getElementById('firm-other').checked;
 }));
 
+function syncIntent(){
+  const order = document.getElementById('intent-order');
+  const ordering = order && order.checked;
+  document.querySelectorAll('select[name=onboarding_day], select[name=onboarding_time]')
+    .forEach(el => { el.required = ordering; });
+  const btn = document.querySelector('form.bigform .submit');
+  if (btn) btn.textContent = ordering ? "Order the pilot and book the call"
+    : (document.getElementById('intent-fit').checked ? "Send my question" : "Send it over");
+}
+document.querySelectorAll('input[name=intent]').forEach(r => r.addEventListener('change', syncIntent));
+
 function setIntent(v){
   const el = document.getElementById(v === "order" ? "intent-order" : "intent-fit");
   if (el) el.checked = true;
+  syncIntent();
 }
 paintQuota();
 </script>
